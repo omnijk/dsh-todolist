@@ -147,14 +147,18 @@ window.__ModuleLoader__.load({
 .dtl-h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: 0.1px; }
 .dtl-sub { margin: 1px 0 0; font-size: 13px; color: var(--dsw-alias-label-tertiary); }
 .dtl-headside { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.dtl-iconbtn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: none;
-  border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-tertiary);
-  cursor: pointer; transition: background .14s ease, color .14s ease, border-color .14s ease, transform .1s ease; }
+.dtl-iconbtn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex: none;
+  padding: 0; border: 1px solid var(--dsw-alias-border-l2, #0000001a); border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1, #fff); color: var(--dsw-alias-label-secondary);
+  box-shadow: 0 1px 2px rgba(15, 18, 24, .05); cursor: pointer;
+  transition: background .14s ease, color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .1s ease; }
 .dtl-iconbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary);
-  border-color: var(--dsw-alias-border-l2, #0000001a); }
+  border-color: var(--dsw-alias-border-l3, #00000026); box-shadow: 0 2px 6px rgba(15, 18, 24, .08); }
 .dtl-iconbtn:active { transform: scale(.94); }
+.dtl-iconbtn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
 .dtl-iconbtn:disabled { opacity: .5; cursor: default; }
-.dtl-iconbtn[data-busy="true"] { color: var(--dsw-alias-brand-primary); }
+.dtl-iconbtn[data-busy="true"] { color: var(--dsw-alias-brand-primary);
+  border-color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-bg-layer-1, #fff); }
 .dtl-iconbtn[data-busy="true"] svg { animation: dtl-spin .9s linear infinite; }
 @keyframes dtl-spin { to { transform: rotate(360deg); } }
 
@@ -323,10 +327,11 @@ window.__ModuleLoader__.load({
       svg(
         size,
         [
-          h('path', { key: 'a', d: 'M3.4 8.6A6.9 6.9 0 0 1 15.6 5.9' }),
-          h('path', { key: 'b', d: 'M16.6 11.4A6.9 6.9 0 0 1 4.4 14.1' }),
-          h('path', { key: 'c', d: 'M15.9 2.4v3.7h-3.7' }),
-          h('path', { key: 'd', d: 'M4.1 17.6v-3.7h3.7' }),
+          h('path', {
+            key: 'a',
+            d: 'M17.5 10a7.5 7.5 0 1 1-7.5-7.5c2.1 0 4.1.83 5.62 2.28L17.5 6.6',
+          }),
+          h('path', { key: 'b', d: 'M17.5 2.5v4.2h-4.2' }),
         ],
         { strokeWidth: 1.7 },
       )
@@ -879,11 +884,17 @@ window.__ModuleLoader__.load({
     }
 
       async function load() {
+        // A focus refresh must never race a write that is still in flight:
+        // the older document would land after the newer one and revert what
+        // the user just toggled or dropped in.
+        if (saveTimers.size > 0 || writeChains.size > 0) return
         store.set({ phase: store.get().phase === 'ready' ? 'ready' : 'loading', error: null })
+        const stamp = store.get().revision
         try {
           const response = await fetch(ROUTE, { cache: 'no-store', headers: { accept: 'application/json' } })
           if (!response.ok) throw new Error(`HTTP ${response.status}`)
           const body = await response.json()
+          if (store.get().revision !== stamp) return
           store.set({
             phase: 'ready',
             workspaces: body !== null && typeof body === 'object' && body.workspaces ? body.workspaces : {},
