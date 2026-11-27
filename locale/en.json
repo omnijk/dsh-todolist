@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Todo Queue",
+    "description": "Line up your next prompts while the model works, then let them start automatically when the current turn ends — in the same session or a fresh one.",
+    "detail": "docs/DETAIL.md"
+  }
+}

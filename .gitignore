@@ -1,0 +1,6 @@
+node_modules/
+.probe-*
+.catalog.json
+.make-assets.py
+.state-backup.json
+*.log
