@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Todo Queue",
-    "description": "Queue your next prompts while the agent works — it runs them one by one on autopilot, starting a todo the moment a turn ends.",
+    "description": "Write your next prompts and walk away — the agent works through the queue one by one on autopilot, starting a todo the moment a turn ends.",
     "detail": "docs/DETAIL.md"
   }
 }

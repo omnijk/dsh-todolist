@@ -2,7 +2,7 @@
   "name": "dsh-todolist",
   "version": "1.0.0",
   "type": "module",
-  "description": "Queue your next prompts while the agent works — it runs them one by one on autopilot, starting a todo the moment a turn ends.",
+  "description": "Write your next prompts and walk away — the agent works through the queue one by one on autopilot, starting a todo the moment a turn ends.",
   "license": "MIT",
   "author": "omnijk",
   "homepage": "https://github.com/omnijk/dsh-todolist#readme",
