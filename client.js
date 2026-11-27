@@ -18,6 +18,12 @@ window.__ModuleLoader__.load({
     const ROUTE = '/api/todolist.state'
     const DEFAULT_WORKSPACE = '__unscoped__'
     const MAX_CHARS = 20000
+    const MAX_FILES = 6
+    const MAX_IMAGE_CHARS = 3_600_000
+    const MAX_FILE_TEXT_CHARS = 200000
+    const MAX_IMAGE_EDGE = 1400
+    const IMAGE_ACCEPT = 'image/*'
+    const TEXT_EXT = /\.(txt|md|markdown|text|log|csv)$/i
     const SELECT_ALL = snapshot => snapshot
 
     // ---------------------------------------------------------------- labels
@@ -64,6 +70,14 @@ window.__ModuleLoader__.load({
       dragHandle: '拖动排序',
       pendingUnit: '项待办',
       shortcut: 'Ctrl / ⌘ + Enter 直接添加',
+      attach: '添加附件',
+      attachHint: '图片、txt、md',
+      attachLimit: '最多 6 个附件',
+      attachUnsupported: '不支持这个文件类型',
+      attachTooLarge: '图片太大，压缩后仍然超过上限',
+      attachReading: '正在读取附件…',
+      removeFile: '移除附件',
+      fillBlocked: '这条待办带附件，请用「开始」发送',
     }
 
     const en = {
@@ -108,6 +122,14 @@ window.__ModuleLoader__.load({
       dragHandle: 'Drag to reorder',
       pendingUnit: 'pending',
       shortcut: 'Ctrl / ⌘ + Enter adds directly',
+      attach: 'Attach',
+      attachHint: 'images, txt, md',
+      attachLimit: 'Up to 6 attachments',
+      attachUnsupported: 'That file type is not supported',
+      attachTooLarge: 'Image is still too large after downscaling',
+      attachReading: 'Reading attachment…',
+      removeFile: 'Remove attachment',
+      fillBlocked: 'This todo has attachments — use Start instead',
     }
 
     // --------------------------------------------------------------- styling
@@ -125,11 +147,15 @@ window.__ModuleLoader__.load({
 .dtl-h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: 0.1px; }
 .dtl-sub { margin: 1px 0 0; font-size: 13px; color: var(--dsw-alias-label-tertiary); }
 .dtl-headside { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.dtl-iconbtn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex: none;
-  border: 0; border-radius: 10px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer;
-  transition: background .14s ease, color .14s ease; }
-.dtl-iconbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
-.dtl-iconbtn[data-busy="true"] svg { animation: dtl-spin 1s linear infinite; }
+.dtl-iconbtn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: none;
+  border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-tertiary);
+  cursor: pointer; transition: background .14s ease, color .14s ease, border-color .14s ease, transform .1s ease; }
+.dtl-iconbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-border-l2, #0000001a); }
+.dtl-iconbtn:active { transform: scale(.94); }
+.dtl-iconbtn:disabled { opacity: .5; cursor: default; }
+.dtl-iconbtn[data-busy="true"] { color: var(--dsw-alias-brand-primary); }
+.dtl-iconbtn[data-busy="true"] svg { animation: dtl-spin .9s linear infinite; }
 @keyframes dtl-spin { to { transform: rotate(360deg); } }
 
 .dtl-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 220px; height: 32px; padding: 0 10px;
@@ -159,6 +185,24 @@ window.__ModuleLoader__.load({
 .dtl-counter { font-size: 12px; color: var(--dsw-alias-label-caption, #a8adb5); font-variant-numeric: tabular-nums; }
 .dtl-counter[data-over="true"] { color: var(--dsw-alias-label-error); }
 .dtl-hint { margin-left: auto; font-size: 11.5px; color: var(--dsw-alias-label-caption, #a8adb5); }
+.dtl-attach { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px 0 7px; flex: none;
+  border: 1px solid var(--dsw-alias-border-l2, #0000001a); border-radius: 8px; background: transparent;
+  color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer;
+  transition: background .14s ease, color .14s ease; }
+.dtl-attach:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.dtl-attach[disabled] { opacity: .55; cursor: default; }
+.dtl-files { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 6px; }
+.dtl-files-inline { padding: 0; margin-top: 1px; }
+.dtl-file { display: inline-flex; align-items: center; gap: 5px; max-width: 220px; height: 24px; padding: 0 4px 0 5px;
+  border: 1px solid var(--dsw-alias-border-l2, #0000001a); border-radius: 7px;
+  background: var(--dsw-alias-bg-module-platform, #f5f6f7); color: var(--dsw-alias-label-secondary); font-size: 11.5px; }
+.dtl-file-static { background: transparent; max-width: 190px; }
+.dtl-filethumb { width: 16px; height: 16px; flex: none; border-radius: 4px; object-fit: cover; }
+.dtl-fileicon { display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--dsw-alias-label-tertiary); }
+.dtl-filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dtl-filedrop { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none;
+  padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--dsw-alias-label-caption, #a8adb5); cursor: pointer; }
+.dtl-filedrop:hover { background: var(--dsw-alias-interactive-bg-hover-danger); color: var(--dsw-alias-label-error); }
 
 .dtl-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 0; border-radius: 10px;
   font-size: 13px; font-weight: 600; cursor: pointer; transition: background .14s ease, opacity .14s ease, color .14s ease;
@@ -214,8 +258,7 @@ window.__ModuleLoader__.load({
   border-radius: 8px; border: 1px solid var(--dsw-alias-border-l3); background: var(--dsw-alias-bg-base);
   color: inherit; font: inherit; font-size: 14px; line-height: 1.6; outline: none; }
 .dtl-edit:focus { border-color: var(--dsw-alias-brand-primary); }
-.dtl-actions { display: flex; align-items: center; gap: 4px; flex: none; opacity: 0; transition: opacity .12s ease; }
-.dtl-row:hover .dtl-actions, .dtl-row[data-editing="true"] .dtl-actions { opacity: 1; }
+.dtl-actions { display: flex; align-items: center; gap: 4px; flex: none; }
 .dtl-act { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border-radius: 8px;
   border: 1px solid var(--dsw-alias-border-l2, #0000001a); background: var(--dsw-alias-bg-layer-1, #fff); color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer;
   box-shadow: 0 1px 2px rgba(15,18,24,.06); }
@@ -277,10 +320,16 @@ window.__ModuleLoader__.load({
       ])
 
     const IconRefresh = size =>
-      svg(size, [
-        h('path', { key: 'a', d: 'M16.2 9.2a6.2 6.2 0 1 1-1.9-4.4' }),
-        h('path', { key: 'b', d: 'M16.4 3.6v4.1h-4.1' }),
-      ])
+      svg(
+        size,
+        [
+          h('path', { key: 'a', d: 'M3.4 8.6A6.9 6.9 0 0 1 15.6 5.9' }),
+          h('path', { key: 'b', d: 'M16.6 11.4A6.9 6.9 0 0 1 4.4 14.1' }),
+          h('path', { key: 'c', d: 'M15.9 2.4v3.7h-3.7' }),
+          h('path', { key: 'd', d: 'M4.1 17.6v-3.7h3.7' }),
+        ],
+        { strokeWidth: 1.7 },
+      )
 
     const IconPlus = size => svg(size, [h('path', { key: 'a', d: 'M10 4.6v10.8M4.6 10h10.8' })])
 
@@ -331,6 +380,29 @@ window.__ModuleLoader__.load({
         h('path', { key: 'b', d: 'M8.8 4.4L5.9 7.2l2.9 2.8' }),
       ])
 
+    const IconClip = size =>
+      svg(size, [
+        h('path', {
+          key: 'a',
+          d: 'M14.4 9.1l-4.9 4.9a3.1 3.1 0 01-4.4-4.4l5.4-5.4a2.1 2.1 0 012.9 2.9L7.6 12.9a1 1 0 01-1.5-1.5l4.6-4.6',
+        }),
+      ])
+
+    const IconDoc = size =>
+      svg(size, [
+        h('path', { key: 'a', d: 'M5.6 3.4h5.2l3.6 3.6v9.6H5.6z' }),
+        h('path', { key: 'b', d: 'M10.4 3.6v3.8h3.8' }),
+      ])
+
+    const IconClose = size => svg(size, [h('path', { key: 'a', d: 'M5.6 5.6l8.8 8.8M14.4 5.6l-8.8 8.8' })])
+
+    const IconImage = size =>
+      svg(size, [
+        h('rect', { key: 'a', x: 3.4, y: 4.4, width: 13.2, height: 11.2, rx: 2.2 }),
+        h('circle', { key: 'b', cx: 7.6, cy: 8.4, r: 1.2 }),
+        h('path', { key: 'c', d: 'M4.2 14.2l4.1-4 3 2.9 2-1.9 2.6 2.6' }),
+      ])
+
     /** Give a bare icon element a React key when it joins a children array. */
     function ic(key, element) {
       return element === null || element === undefined ? null : React.cloneElement(element, { key })
@@ -355,8 +427,118 @@ window.__ModuleLoader__.load({
       return flat.length > 140 ? `${flat.slice(0, 140)}…` : flat
     }
 
+    /**
+     * One todo becomes one prompt: the text first, then each attachment in the
+     * order it was added. Images travel as base64 parts (the session contract
+     * promotes them to durable references); text files are inlined under a
+     * filename header so the model can tell them apart.
+     */
+    function promptContentOf(item) {
+      const parts = []
+      const text = typeof item.text === 'string' ? item.text : ''
+      if (text.trim().length > 0) parts.push({ type: 'text', text })
+      for (const file of item.files ?? []) {
+        if (file.kind === 'image') {
+          parts.push({ type: 'image', mediaType: file.mediaType, data: file.data, name: file.name })
+        } else {
+          parts.push({ type: 'text', text: `\n\n--- ${file.name} ---\n\n${file.text}` })
+        }
+      }
+      if (parts.length === 0) parts.push({ type: 'text', text })
+      return parts
+    }
+
+    function fileLabel(file) {
+      return typeof file.name === 'string' && file.name.length > 0 ? file.name : 'file'
+    }
+
+    function readAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result ?? ''))
+        reader.onerror = () => reject(reader.error ?? new Error('read failed'))
+        reader.readAsText(file)
+      })
+    }
+
+    function readAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result ?? ''))
+        reader.onerror = () => reject(reader.error ?? new Error('read failed'))
+        reader.readAsDataURL(file)
+      })
+    }
+
+    function loadImage(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve(image)
+        image.onerror = () => reject(new Error('decode failed'))
+        image.src = dataUrl
+      })
+    }
+
+    /** Shrink a picture in the browser so one screenshot cannot bloat the state file. */
+    async function downscaleImage(dataUrl) {
+      const image = await loadImage(dataUrl)
+      const edge = Math.max(image.width, image.height)
+      const scale = edge > MAX_IMAGE_EDGE ? MAX_IMAGE_EDGE / edge : 1
+      const width = Math.max(1, Math.round(image.width * scale))
+      const height = Math.max(1, Math.round(image.height * scale))
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const context = canvas.getContext('2d')
+      if (context === null) throw new Error('canvas unavailable')
+      context.drawImage(image, 0, 0, width, height)
+      return canvas.toDataURL('image/jpeg', 0.86)
+    }
+
+    /** Turn a picked File into the shape the queue stores, or report why not. */
+    async function readAttachment(file) {
+      const name = typeof file.name === 'string' && file.name.length > 0 ? file.name : 'file'
+      if (typeof file.type === 'string' && file.type.startsWith('image/')) {
+        const raw = await readAsDataUrl(file)
+        let dataUrl = raw
+        let mediaType = (file.type || 'image/jpeg').toLowerCase()
+        if (dataUrl.length > MAX_IMAGE_CHARS) {
+          dataUrl = await downscaleImage(raw)
+          mediaType = 'image/jpeg'
+        }
+        if (dataUrl.length > MAX_IMAGE_CHARS) return { error: 'too-large' }
+        const comma = dataUrl.indexOf(',')
+        if (comma < 0) return { error: 'unsupported' }
+        return { file: { id: newId(), kind: 'image', name, mediaType, data: dataUrl.slice(comma + 1) } }
+      }
+      if (TEXT_EXT.test(name) || (typeof file.type === 'string' && file.type.startsWith('text/'))) {
+        const text = await readAsText(file)
+        if (text.length === 0) return { error: 'unsupported' }
+        return { file: { id: newId(), kind: 'text', name, text: text.slice(0, MAX_FILE_TEXT_CHARS) } }
+      }
+      return { error: 'unsupported' }
+    }
+
     function emptyEntry() {
       return { items: [], autoRun: false, mode: 'same', sessionId: null, draft: '' }
+    }
+
+    function normalizeFiles(raw) {
+      if (!Array.isArray(raw)) return []
+      const files = []
+      for (const file of raw.slice(0, MAX_FILES)) {
+        if (file === null || typeof file !== 'object') continue
+        const name = typeof file.name === 'string' && file.name.length > 0 ? file.name : 'file'
+        if (file.kind === 'image') {
+          if (typeof file.data !== 'string' || file.data.length === 0) continue
+          if (typeof file.mediaType !== 'string' || !file.mediaType.startsWith('image/')) continue
+          files.push({ id: file.id ?? newId(), kind: 'image', name, mediaType: file.mediaType, data: file.data })
+          continue
+        }
+        if (typeof file.text !== 'string' || file.text.length === 0) continue
+        files.push({ id: file.id ?? newId(), kind: 'text', name, text: file.text.slice(0, MAX_FILE_TEXT_CHARS) })
+      }
+      return files
     }
 
     function normalizeEntry(raw) {
@@ -371,6 +553,7 @@ window.__ModuleLoader__.load({
               status: item.status === 'done' ? 'done' : 'pending',
               createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
               doneAt: typeof item.doneAt === 'number' ? item.doneAt : undefined,
+              files: normalizeFiles(item.files),
             }))
         : []
       return {
@@ -788,7 +971,7 @@ window.__ModuleLoader__.load({
           requestId: requestId(),
           sessionId: targetSession,
           mode: 'queue',
-          content: [{ type: 'text', text: item.text }],
+          content: promptContentOf(item),
         })
         if (response !== null && typeof response === 'object' && response.ok === true) {
           return { ok: true, sessionId: targetSession }
@@ -875,15 +1058,23 @@ window.__ModuleLoader__.load({
           void load()
         },
 
-        addItem(text) {
+        addItem(text, files) {
           const trimmed = text.trim()
           if (trimmed.length === 0) return
+          const attached = normalizeFiles(files ?? [])
           updateEntry(entry => ({
             ...entry,
             draft: '',
             items: [
               ...entry.items,
-              { id: newId(), text: trimmed, title: titleOf(trimmed), status: 'pending', createdAt: Date.now() },
+              {
+                id: newId(),
+                text: trimmed,
+                title: titleOf(trimmed),
+                status: 'pending',
+                createdAt: Date.now(),
+                files: attached,
+              },
             ],
           }))
           draftMemory.set(currentWorkspaceId(), '')
@@ -963,6 +1154,12 @@ window.__ModuleLoader__.load({
         },
 
         fillItem(item) {
+          // A draft can only carry text: attachments would be silently lost,
+          // so say so instead of dropping them.
+          if ((item.files ?? []).length > 0) {
+            store.notice(t('fillBlocked'))
+            return
+          }
           const ok = fillDraft(item.text, currentWorkspaceId())
           store.notice(ok ? t('filled') : t('saveFailed'))
         },
@@ -983,8 +1180,11 @@ window.__ModuleLoader__.load({
       const [editing, setEditing] = useState(null)
       const [menuOpen, setMenuOpen] = useState(false)
       const [toast, setToast] = useState(null)
+      const [files, setFiles] = useState([])
+      const [reading, setReading] = useState(false)
       const menuRef = useRef(null)
       const textareaRef = useRef(null)
+      const fileInputRef = useRef(null)
 
       const detected = useMemo(() => api.detectWorkspaceId(), [sessions, workspaces])
       const workspaceId = api.runState.viewWorkspaceId ?? detected
@@ -1064,10 +1264,48 @@ window.__ModuleLoader__.load({
 
       const submitDraft = useCallback(() => {
         if (draft.trim().length === 0) return
-        api.addItem(draft)
+        api.addItem(draft, files)
         setDraft('')
+        setFiles([])
         textareaRef.current?.focus()
-      }, [api, draft])
+      }, [api, draft, files])
+
+      const onPickFiles = useCallback(
+        async event => {
+          const picked = Array.from(event.target.files ?? [])
+          event.target.value = ''
+          if (picked.length === 0) return
+          setReading(true)
+          try {
+            const accepted = []
+            for (const file of picked) {
+              if (files.length + accepted.length >= MAX_FILES) {
+                setToast(t('attachLimit'))
+                break
+              }
+              let result
+              try {
+                result = await readAttachment(file)
+              } catch {
+                result = { error: 'unsupported' }
+              }
+              if (result.error === 'too-large') {
+                setToast(t('attachTooLarge'))
+                continue
+              }
+              if (result.error !== undefined || result.file === undefined) {
+                setToast(t('attachUnsupported'))
+                continue
+              }
+              accepted.push(result.file)
+            }
+            if (accepted.length > 0) setFiles(list => [...list, ...accepted].slice(0, MAX_FILES))
+          } finally {
+            setReading(false)
+          }
+        },
+        [files, t],
+      )
 
       const flushDraft = useCallback(() => {
         api.commitDraft(draftRef.current, draftWorkspace.current ?? workspaceId)
@@ -1190,6 +1428,15 @@ window.__ModuleLoader__.load({
             'section',
             { key: 'composer', className: 'dtl-card dtl-composer' },
             [
+              h('input', {
+                key: 'picker',
+                ref: fileInputRef,
+                type: 'file',
+                multiple: true,
+                accept: `${IMAGE_ACCEPT},.txt,.md,.markdown,.text,.log,.csv`,
+                style: { display: 'none' },
+                onChange: onPickFiles,
+              }),
               h('textarea', {
                 key: 'input',
                 ref: textareaRef,
@@ -1206,7 +1453,50 @@ window.__ModuleLoader__.load({
                 onBlur: flushDraft,
                 onKeyDown,
               }),
+              files.length > 0
+                ? h(
+                    'div',
+                    { key: 'files', className: 'dtl-files' },
+                    files.map(file =>
+                      h('span', { key: file.id, className: 'dtl-file' }, [
+                        file.kind === 'image'
+                          ? h('img', {
+                              key: 'i',
+                              className: 'dtl-filethumb',
+                              src: `data:${file.mediaType};base64,${file.data}`,
+                              alt: '',
+                            })
+                          : h('span', { key: 'i', className: 'dtl-fileicon' }, IconDoc(13)),
+                        h('span', { key: 'n', className: 'dtl-filename', title: fileLabel(file) }, fileLabel(file)),
+                        h(
+                          'button',
+                          {
+                            key: 'x',
+                            type: 'button',
+                            className: 'dtl-filedrop',
+                            title: t('removeFile'),
+                            'aria-label': t('removeFile'),
+                            onClick: () => setFiles(list => list.filter(entry => entry.id !== file.id)),
+                          },
+                          IconClose(10),
+                        ),
+                      ]),
+                    ),
+                  )
+                : null,
               h('div', { key: 'foot', className: 'dtl-composerfoot' }, [
+                h(
+                  'button',
+                  {
+                    key: 'attach',
+                    type: 'button',
+                    className: 'dtl-attach',
+                    title: `${t('attach')} · ${t('attachHint')}`,
+                    disabled: reading,
+                    onClick: () => fileInputRef.current?.click(),
+                  },
+                  [ic('p', IconClip(15)), h('span', { key: 'l' }, reading ? t('attachReading') : t('attach'))],
+                ),
                 h(
                   'span',
                   { key: 'c', className: 'dtl-counter', 'data-over': String(draft.length > MAX_CHARS) },
@@ -1362,6 +1652,29 @@ window.__ModuleLoader__.load({
               },
               item.title || titleOf(item.text),
             ),
+            (item.files ?? []).length > 0
+              ? h(
+                  'div',
+                  { key: 'f', className: 'dtl-files dtl-files-inline' },
+                  item.files.map(file =>
+                    h(
+                      'span',
+                      { key: file.id, className: 'dtl-file dtl-file-static', title: fileLabel(file) },
+                      [
+                        file.kind === 'image'
+                          ? h('img', {
+                              key: 'i',
+                              className: 'dtl-filethumb',
+                              src: `data:${file.mediaType};base64,${file.data}`,
+                              alt: '',
+                            })
+                          : h('span', { key: 'i', className: 'dtl-fileicon' }, IconDoc(12)),
+                        h('span', { key: 'n', className: 'dtl-filename' }, fileLabel(file)),
+                      ],
+                    ),
+                  ),
+                )
+              : null,
             h('div', { key: 'm', className: 'dtl-meta' }, [
               h('span', { key: 'i' }, `#${index + 1}`),
               h('span', { key: 'c' }, timeLabel(item.createdAt)),

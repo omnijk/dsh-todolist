@@ -10,7 +10,8 @@ Line up your next prompts while the model is still working. A per-workspace queu
 - **Auto-continue.** With the switch on, when any session in that workspace finishes a turn, the first pending item is sent into it — as the next queued turn (same session) or into a newly created session (`同一会话` / `新建会话`). Sending happens in the background: the page does not jump, the composer keeps its focus.
 - **Manual control too.** `▶ 开始` sends an item now; `💬 填入对话` only drops its text into the session composer without sending.
 - **Draft safety.** The composer keeps 20000 characters and saves what you typed per workspace, so switching sessions, switching panels or reloading the page does not lose it.
-- **Editing.** Drag the handle to reorder, double-click a title to edit it in place, `✓` marks an item done (and `↺` reopens it), `🗑` deletes it, and completed items can be cleared in one click.
+- **Attachments.** A todo can carry images and text files (`txt` / `md` and friends), because a todo usually becomes a prompt: images are sent as image parts, text files are inlined as text, up to 6 per item. Images are downscaled to 1400px JPEG before they are stored.
+- **Editing.** Drag the handle to reorder, double-click a title to edit it in place, `✓` marks an item done (and `↺` reopens it), `🗑` deletes it, and completed items can be cleared in one click. Row actions stay visible instead of appearing on hover.
 - **Durable storage.** Items are written by the plugin's host half to `<profile>/plugin-data/dsh-todolist/state.json` — the queue survives GUI restarts and port changes.
 
 ## Install
@@ -79,7 +80,8 @@ MIT
 - **自动续跑**：打开开关后，这个工作区里任意会话结束一轮，队列第一条自动发出；`同一会话` 追加在原来那个会话里，`新建会话` 每条新开一个会话。发送在后台完成，页面不跳转、不抢焦点。
 - **手动控制**：`▸ 开始` 立刻发送该条；`💬 填入对话` 只把文本填进输入框，不发送。
 - **草稿不丢**：输入框 20000 字上限，写了一半切会话、切面板、刷新页面都不会丢（草稿按工作区保存）。
-- **编辑**：拖动手柄排序，双击标题就地编辑，`✓` 标记完成 / `↺` 恢复待办，`🗑` 删除，可一键清除已完成。
+- **附件**：一条待办可以带图片和文本文件（`txt` / `md` 等），因为待办最终就是提示词——图片按 image part 发送，文本文件内联成文本，每条最多 6 个；图片入库前会压到 1400px 的 JPEG。
+- **编辑**：拖动手柄排序，双击标题就地编辑，`✓` 标记完成 / `↺` 恢复待办，`🗑` 删除，可一键清除已完成；行内按钮常显，不再需要悬浮。
 - **持久化**：数据由插件 Host 半写入 `<profile>/plugin-data/dsh-todolist/state.json`，重启 GUI、换端口都不丢。
 
 ## 安装

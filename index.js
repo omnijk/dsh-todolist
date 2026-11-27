@@ -18,9 +18,49 @@ import { homedir } from 'node:os'
 
 const ROUTE = '/api/todolist.state'
 const DOCUMENT_VERSION = 1
-const MAX_BODY_BYTES = 4 * 1024 * 1024
+const MAX_BODY_BYTES = 24 * 1024 * 1024
 const MAX_ITEMS = 500
 const MAX_DRAFT_CHARS = 20000
+const MAX_FILES_PER_ITEM = 6
+const MAX_IMAGE_CHARS = 3_600_000
+const MAX_FILE_TEXT_CHARS = 200000
+
+/**
+ * Attachments live inline in the document: images as base64 (the prompt wire
+ * format), text files as their decoded body. Both are re-validated here so a
+ * hand-edited state file cannot push an unbounded payload into a prompt.
+ */
+function normalizeFiles(raw) {
+  if (!Array.isArray(raw)) return []
+  const files = []
+  for (const file of raw.slice(0, MAX_FILES_PER_ITEM)) {
+    if (file === null || typeof file !== 'object') continue
+    const name = typeof file.name === 'string' && file.name.length > 0 ? file.name.slice(0, 160) : 'file'
+    if (file.kind === 'image') {
+      const data = typeof file.data === 'string' ? file.data : ''
+      const mediaType = typeof file.mediaType === 'string' ? file.mediaType : ''
+      if (data.length === 0 || data.length > MAX_IMAGE_CHARS) continue
+      if (!mediaType.startsWith('image/')) continue
+      files.push({
+        id: typeof file.id === 'string' && file.id.length > 0 ? file.id : `f-${Math.random().toString(36).slice(2, 10)}`,
+        kind: 'image',
+        name,
+        mediaType,
+        data,
+      })
+      continue
+    }
+    const text = typeof file.text === 'string' ? file.text.slice(0, MAX_FILE_TEXT_CHARS) : ''
+    if (text.length === 0) continue
+    files.push({
+      id: typeof file.id === 'string' && file.id.length > 0 ? file.id : `f-${Math.random().toString(36).slice(2, 10)}`,
+      kind: 'text',
+      name,
+      text,
+    })
+  }
+  return files
+}
 
 /**
  * Resolve the on-disk document path.
@@ -67,6 +107,7 @@ function normalizeDocument(raw) {
               status: item.status === 'done' ? 'done' : 'pending',
               createdAt: typeof item.createdAt === 'number' ? item.createdAt : Date.now(),
               doneAt: typeof item.doneAt === 'number' ? item.doneAt : undefined,
+              files: normalizeFiles(item.files),
             }))
         : []
       workspaces[workspaceId] = {
