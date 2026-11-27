@@ -2,7 +2,7 @@
   "name": "dsh-todolist",
   "version": "1.0.0",
   "type": "module",
-  "description": "A per-workspace prompt queue for DSH: write the next prompts while the model works, and send the first one automatically when a turn in that workspace ends.",
+  "description": "Queue your next prompts while the agent works — it runs them one by one on autopilot, starting a todo the moment a turn ends.",
   "license": "MIT",
   "author": "omnijk",
   "homepage": "https://github.com/omnijk/dsh-todolist#readme",

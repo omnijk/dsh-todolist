@@ -1,6 +1,8 @@
 # dsh-todolist · 待办事项 / Todo Queue
 
-Line up your next prompts while the model is still working. A per-workspace queue panel in the DSH Web GUI: write the next tasks, order them, and the first one is sent automatically when a turn in that workspace ends — into the same session or into a fresh one.
+Queue your next prompts while the agent works — it then runs them one by one on autopilot, starting a todo the moment a turn ends. No copy-paste, no sitting idle: the same session keeps going, or every todo gets a fresh one.
+
+A per-workspace queue panel in the DSH Web GUI. Write the tasks, order them, walk away.
 
 ![Todo queue panel](assets/screenshot-1.png)
 
@@ -72,7 +74,9 @@ MIT
 
 # 中文说明
 
-把下一段提示词先排好队。模型正在跑当前这一轮的时候，你可以在侧边栏的「待办事项」面板里把接下来要做的事一条条写好、排好序；这一轮结束，队列第一条会自动发出去开始新事项——可以留在同一个会话里继续，也可以每条都新开一个会话。
+模型干活的时候，你先排好后面要做的提示词；它一轮结束就自动接着做下一条——不用复制粘贴，也不用干等。可以留在同一个会话里一直跑，也可以每条都新开一个会话。
+
+侧边栏里的「待办事项」面板，按工作区各存一份队列：写好、排好序，然后就能去干别的了。
 
 ## 功能
 

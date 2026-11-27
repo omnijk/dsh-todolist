@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Todo Queue",
-    "description": "Line up your next prompts while the model works, then let them start automatically when the current turn ends — in the same session or a fresh one.",
+    "description": "Queue your next prompts while the agent works — it runs them one by one on autopilot, starting a todo the moment a turn ends.",
     "detail": "docs/DETAIL.md"
   }
 }
