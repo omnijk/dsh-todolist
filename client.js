@@ -135,10 +135,15 @@ window.__ModuleLoader__.load({
     // --------------------------------------------------------------- styling
 
     const CSS = `
-.dtl-root { position: relative; display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box;
+.dtl-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0;
+  overflow-y: auto; overflow-x: hidden; box-sizing: border-box;
   padding: calc(var(--dsh-frame-top-clearance, 0px) + 16px) 28px 96px;
   color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-base);
-  font-size: 14px; line-height: 1.55; }
+  font-size: 14px; line-height: 1.55; scrollbar-width: thin; }
+.dtl-root::-webkit-scrollbar { width: 10px; }
+.dtl-root::-webkit-scrollbar-thumb { background: var(--dsw-alias-scrollbar-bg-l1, #00000024); border-radius: 6px;
+  border: 3px solid transparent; background-clip: content-box; }
+.dtl-root::-webkit-scrollbar-thumb:hover { background: var(--dsw-alias-scrollbar-bg-l2, #00000038); background-clip: content-box; }
 .dtl-inner { width: 100%; max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 .dtl-head { display: flex; align-items: center; gap: 14px; }
 .dtl-badge { width: 52px; height: 52px; flex: none; display: flex; align-items: center; justify-content: center;
@@ -250,8 +255,7 @@ window.__ModuleLoader__.load({
 .dtl-row[data-dragging="true"] { opacity: .45; }
 .dtl-row[data-drop="true"] { box-shadow: inset 0 2px 0 var(--dsw-alias-brand-primary, #0f1115); }
 .dtl-grip { width: 20px; height: 26px; flex: none; display: flex; align-items: center; justify-content: center;
-  border: 0; background: transparent; color: var(--dsw-alias-label-caption, #a8adb5); cursor: grab; opacity: .45; padding: 0; }
-.dtl-row:hover .dtl-grip { opacity: 1; }
+  border: 0; background: transparent; color: var(--dsw-alias-label-caption, #a8adb5); cursor: grab; opacity: 1; padding: 0; }
 .dtl-grip:active { cursor: grabbing; }
 .dtl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-top: 0; }
 .dtl-title { font-size: 14px; overflow-wrap: anywhere; white-space: pre-wrap; cursor: text; }
@@ -262,7 +266,9 @@ window.__ModuleLoader__.load({
   border-radius: 8px; border: 1px solid var(--dsw-alias-border-l3); background: var(--dsw-alias-bg-base);
   color: inherit; font: inherit; font-size: 14px; line-height: 1.6; outline: none; }
 .dtl-edit:focus { border-color: var(--dsw-alias-brand-primary); }
-.dtl-actions { display: flex; align-items: center; gap: 4px; flex: none; }
+/* Row actions are always visible; a stale stylesheet may still carry the old
+   "hide until hover" rule, so the opacity is pinned here as well. */
+.dtl-actions { display: flex; align-items: center; gap: 4px; flex: none; opacity: 1; }
 .dtl-act { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border-radius: 8px;
   border: 1px solid var(--dsw-alias-border-l2, #0000001a); background: var(--dsw-alias-bg-layer-1, #fff); color: var(--dsw-alias-label-secondary); font-size: 12px; cursor: pointer;
   box-shadow: 0 1px 2px rgba(15,18,24,.06); }
